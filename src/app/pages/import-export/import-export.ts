@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HarvestService } from '../../services/harvest.service';
 import { VegetableService } from '../../services/vegetable.service';
 import { ImportExportService } from '../../services/import-export.service';
+import { MigrationService } from '../../services/migration.service';
+import { VegetableApiService } from '../../services/vegetable-api.service';
+import { HarvestApiService } from '../../services/harvest-api.service';
 import { Harvest } from '../../models/harvest';
 
 @Component({
@@ -12,7 +15,7 @@ import { Harvest } from '../../models/harvest';
   templateUrl: './import-export.html',
   styleUrl: './import-export.css',
 })
-export default class ImportExport {
+export default class ImportExport implements OnInit {
   importStatus: 'idle' | 'success' | 'error' = 'idle';
   importMessage = '';
   importedCount = 0;
@@ -23,11 +26,28 @@ export default class ImportExport {
   sampleDataStatus: 'idle' | 'success' | 'error' = 'idle';
   sampleDataMessage = '';
 
+  // Migration status
+  migrationStatus: 'idle' | 'migrating' | 'success' | 'error' = 'idle';
+  migrationMessage = '';
+  showMigrationSection = false;
+  hasDataToMigrate = false;
+  isMigrationCompleted = false;
+
   constructor(
     private harvestService: HarvestService,
     private vegetableService: VegetableService,
-    private importExportService: ImportExportService
+    private importExportService: ImportExportService,
+    private migrationService: MigrationService,
+    private vegetableApiService: VegetableApiService,
+    private harvestApiService: HarvestApiService
   ) {}
+
+  ngOnInit(): void {
+    // Check migration status
+    this.hasDataToMigrate = this.migrationService.hasDataToMigrate();
+    this.isMigrationCompleted = this.migrationService.isMigrationCompleted();
+    this.showMigrationSection = this.hasDataToMigrate && !this.isMigrationCompleted;
+  }
 
   onFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
@@ -206,5 +226,60 @@ export default class ImportExport {
 
   getCurrentVegetableCount(): number {
     return this.vegetableService.getAll().length;
+  }
+
+  // Migration methods
+  async migrateToNeon(): Promise<void> {
+    if (!confirm('Migrer toutes vos données localStorage vers la base de données Neon ? Cette opération peut prendre quelques secondes.')) {
+      return;
+    }
+
+    this.migrationStatus = 'migrating';
+    this.migrationMessage = 'Migration en cours...';
+
+    try {
+      const result = await this.migrationService.migrateToNeon();
+
+      if (result.success) {
+        // Enable API mode for both services
+        this.vegetableApiService.enableApiMode();
+        this.harvestApiService.enableApiMode();
+
+        this.migrationStatus = 'success';
+        this.migrationMessage = `Migration réussie ! ${result.vegetablesMigrated} légume(s) et ${result.harvestsMigrated} récolte(s) migrés.`;
+
+        if (result.errors.length > 0) {
+          this.migrationMessage += ` ${result.errors.length} erreur(s) rencontrée(s).`;
+          console.warn('Migration errors:', result.errors);
+        }
+
+        this.showMigrationSection = false;
+
+        // Ask if user wants to clear localStorage
+        if (confirm('Migration terminée ! Voulez-vous supprimer les données de localStorage (recommandé) ?')) {
+          this.migrationService.clearLocalStorageData();
+          this.migrationMessage += ' localStorage nettoyé.';
+        }
+      } else {
+        this.migrationStatus = 'error';
+        this.migrationMessage = 'La migration a échoué. Vérifiez la configuration de Neon.';
+        console.error('Migration failed:', result.errors);
+      }
+    } catch (error) {
+      this.migrationStatus = 'error';
+      this.migrationMessage = `Erreur de migration : ${(error as Error).message}`;
+      console.error('Migration error:', error);
+    }
+  }
+
+  cancelMigration(): void {
+    this.showMigrationSection = false;
+  }
+
+  resetMigrationStatus(): void {
+    this.migrationService.resetMigrationStatus();
+    this.vegetableApiService.disableApiMode();
+    this.harvestApiService.disableApiMode();
+    this.ngOnInit();
   }
 }
