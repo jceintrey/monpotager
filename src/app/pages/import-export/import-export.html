@@ -1,6 +1,38 @@
 <div class="container">
   <h1 class="title">Import / Export des données</h1>
 
+  <!-- Migration Section (only show if data exists and migration not completed) -->
+  <div *ngIf="showMigrationSection" class="migration-banner">
+    <div class="migration-header">
+      <h2 class="migration-title">🚀 Migrer vers Neon Database</h2>
+      <p class="migration-description">
+        Vous avez des données en localStorage. Migrez-les vers la base de données Neon pour les synchroniser entre vos appareils !
+      </p>
+    </div>
+
+    <div class="migration-actions">
+      <button
+        (click)="migrateToNeon()"
+        class="btn btn-success btn-large"
+        [disabled]="migrationStatus === 'migrating'"
+      >
+        <span class="btn-icon">{{ migrationStatus === 'migrating' ? '⏳' : '🚀' }}</span>
+        {{ migrationStatus === 'migrating' ? 'Migration en cours...' : 'Migrer vers Neon' }}
+      </button>
+      <button
+        (click)="cancelMigration()"
+        class="btn btn-outline"
+        [disabled]="migrationStatus === 'migrating'"
+      >
+        Plus tard
+      </button>
+    </div>
+
+    <div *ngIf="migrationMessage" class="message" [class.success]="migrationStatus === 'success'" [class.error]="migrationStatus === 'error'">
+      {{ migrationMessage }}
+    </div>
+  </div>
+
   <!-- Current Data Stats -->
   <div class="stats-row">
     <div class="stat-box">
