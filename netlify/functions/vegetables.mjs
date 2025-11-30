@@ -1,7 +1,6 @@
-import { Handler, HandlerEvent, HandlerContext } from '@netlify/functions';
-import { sql } from './db';
+import { sql } from './db.mjs';
 
-const handler: Handler = async (event: HandlerEvent, context: HandlerContext) => {
+export const handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type',
@@ -94,9 +93,7 @@ const handler: Handler = async (event: HandlerEvent, context: HandlerContext) =>
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error', details: (error as Error).message }),
+      body: JSON.stringify({ error: 'Internal server error', details: error.message }),
     };
   }
 };
-
-export { handler };
