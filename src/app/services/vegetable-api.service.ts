@@ -27,8 +27,9 @@ export class VegetableApiService {
   private useApi: boolean = false;
 
   constructor(private apiService: ApiService) {
-    // Check if we should use API
-    this.useApi = localStorage.getItem(USE_API_KEY) === 'true';
+    // Auto-detect: use API in production (netlify.app), localStorage in development (localhost)
+    const isProduction = window.location.hostname.includes('netlify.app');
+    this.useApi = isProduction || localStorage.getItem(USE_API_KEY) === 'true';
   }
 
   /**
