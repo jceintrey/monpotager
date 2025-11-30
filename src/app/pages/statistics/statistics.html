@@ -1,0 +1,92 @@
+<div class="container">
+  <h1 class="title">Statistiques de mon potager</h1>
+
+  <!-- Summary Cards -->
+  <div class="stats-summary">
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-content">
+        <div class="stat-label">Total de récoltes</div>
+        <div class="stat-value">{{ getTotalHarvests() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🥬</div>
+      <div class="stat-content">
+        <div class="stat-label">Légume le plus récolté</div>
+        <div class="stat-value">{{ getMostHarvestedVegetable() }}</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">🌱</div>
+      <div class="stat-content">
+        <div class="stat-label">Variétés cultivées</div>
+        <div class="stat-value">{{ vegetables.length }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pie Chart Section -->
+  <div class="chart-section">
+    <h2 class="section-title">Répartition des récoltes par légume</h2>
+    <div class="chart-container">
+      <div *ngIf="harvests.length === 0" class="empty-chart">
+        <div class="empty-icon">📊</div>
+        <p>Aucune donnée de récolte disponible.</p>
+        <p class="empty-subtitle">Ajoutez vos premières récoltes pour voir les statistiques.</p>
+      </div>
+      <canvas #pieCanvas *ngIf="harvests.length > 0"></canvas>
+    </div>
+  </div>
+
+  <!-- Line Chart Section -->
+  <div class="chart-section">
+    <h2 class="section-title">Évolution des récoltes dans le temps</h2>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="filters-header">
+        <span class="filters-label">Sélectionnez les légumes à afficher :</span>
+        <div class="filters-actions">
+          <button (click)="selectAll()" class="btn-filter btn-filter-sm">
+            Tout sélectionner
+          </button>
+          <button (click)="deselectAll()" class="btn-filter btn-filter-sm">
+            Tout désélectionner
+          </button>
+        </div>
+      </div>
+
+      <div class="vegetable-filters">
+        <label
+          *ngFor="let veg of vegetables"
+          class="filter-checkbox"
+          [class.active]="isSelected(veg.name)"
+        >
+          <input
+            type="checkbox"
+            [checked]="isSelected(veg.name)"
+            (change)="toggleVegetable(veg.name)"
+          />
+          <span class="checkbox-label">{{ veg.name }}</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="chart-container chart-container-line">
+      <div *ngIf="harvests.length === 0" class="empty-chart">
+        <div class="empty-icon">📈</div>
+        <p>Aucune donnée de récolte disponible.</p>
+        <p class="empty-subtitle">Ajoutez vos premières récoltes pour voir l'évolution.</p>
+      </div>
+      <div *ngIf="harvests.length > 0 && selectedVegetables.length === 0" class="empty-chart">
+        <div class="empty-icon">🔍</div>
+        <p>Aucun légume sélectionné.</p>
+        <p class="empty-subtitle">Sélectionnez au moins un légume pour voir l'évolution.</p>
+      </div>
+      <canvas #lineCanvas *ngIf="harvests.length > 0 && selectedVegetables.length > 0"></canvas>
+    </div>
+  </div>
+</div>

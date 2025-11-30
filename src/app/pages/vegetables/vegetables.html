@@ -1,0 +1,194 @@
+<div class="container">
+  <h1 class="title">Mes Légumes</h1>
+
+  <div class="form-card">
+    <h2 class="form-title">{{ isEditing ? 'Modifier un légume' : 'Ajouter un légume' }}</h2>
+    <form (ngSubmit)="onSubmit()" class="form">
+      <div class="form-group">
+        <label for="name" class="label">Nom du légume</label>
+        <input
+          id="name"
+          name="name"
+          [(ngModel)]="name"
+          placeholder="Ex: Tomates, Carottes..."
+          class="input"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="variety" class="label">Variété (optionnel)</label>
+        <input
+          id="variety"
+          name="variety"
+          [(ngModel)]="variety"
+          placeholder="Ex: Cerise, Cœur de bœuf..."
+          class="input"
+        />
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="unit" class="label">Unité de mesure</label>
+          <select id="unit" name="unit" [(ngModel)]="unit" class="input">
+            <option value="g">Grammes (g)</option>
+            <option value="pcs">Pièces (unités)</option>
+            <option value="kg">Kilogrammes (kg)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="image" class="label">Image (URL)</label>
+          <div class="input-with-button">
+            <input
+              id="image"
+              name="image"
+              [(ngModel)]="image"
+              placeholder="https://..."
+              class="input"
+            />
+            <button
+              type="button"
+              (click)="openImageSearch()"
+              class="btn-search-image"
+              title="Rechercher une image"
+            >
+              🔍
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">
+          <span class="btn-icon">{{ isEditing ? '✓' : '+' }}</span>
+          {{ isEditing ? 'Enregistrer les modifications' : 'Ajouter au potager' }}
+        </button>
+        <button
+          *ngIf="isEditing"
+          type="button"
+          (click)="cancelEdit()"
+          class="btn btn-outline"
+        >
+          Annuler
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="vegetables-section">
+    <h2 class="section-title">Mon potager ({{ vegetables.length }} légume<span *ngIf="vegetables.length > 1">s</span>)</h2>
+
+    <div *ngIf="vegetables.length === 0" class="empty-state">
+      <div class="empty-icon">🌱</div>
+      <p>Votre potager est vide.</p>
+      <p class="empty-subtitle">Ajoutez votre premier légume pour commencer !</p>
+    </div>
+
+    <div class="vegetables-grid">
+      <div *ngFor="let v of vegetables" class="vegetable-card">
+        <div class="card-image-wrapper">
+          <img
+            *ngIf="v.image"
+            [src]="v.image"
+            [alt]="v.name"
+            class="card-image"
+          />
+          <div *ngIf="!v.image" class="card-placeholder">
+            🥬
+          </div>
+        </div>
+
+        <div class="card-content">
+          <h3 class="card-title">{{ v.name }}</h3>
+          <p *ngIf="v.variety" class="card-variety">{{ v.variety }}</p>
+          <div class="card-meta">
+            <span class="badge">{{ getUnitLabel(v.unit) }}</span>
+          </div>
+        </div>
+
+        <div class="card-actions">
+          <button
+            type="button"
+            (click)="edit(v)"
+            class="btn btn-secondary btn-sm"
+          >
+            Modifier
+          </button>
+          <button
+            type="button"
+            (click)="remove(v)"
+            class="btn btn-danger btn-sm"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Image Search Modal -->
+<div *ngIf="showImageModal" class="modal-overlay" (click)="closeImageSearch()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title">Rechercher une image</h3>
+      <button (click)="closeImageSearch()" class="modal-close">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="imageSearchQuery"
+          (keyup.enter)="searchImages()"
+          placeholder="Ex: tomate, carotte..."
+          class="search-input"
+        />
+        <button (click)="searchImages()" class="btn btn-primary">
+          Rechercher
+        </button>
+      </div>
+
+      <div class="helper-text">
+        💡 Astuce : Vous pouvez aussi utiliser des sites comme
+        <a href="https://www.freeimages.com" target="_blank" rel="noopener">FreeImages.com</a>,
+        <a href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a>, ou
+        <a href="https://pixabay.com" target="_blank" rel="noopener">Pixabay</a>
+        pour trouver des images gratuites et copier leur URL ici.
+      </div>
+
+      <div class="manual-url">
+        <label class="label">Ou collez directement une URL d'image :</label>
+        <div class="url-input-group">
+          <input
+            type="url"
+            [(ngModel)]="manualImageUrl"
+            placeholder="https://example.com/image.jpg"
+            class="input"
+          />
+          <button
+            (click)="useManualUrl()"
+            class="btn btn-secondary"
+            [disabled]="!manualImageUrl"
+          >
+            Utiliser cette URL
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="imageSearchResults.length > 0" class="image-results">
+        <h4 class="results-title">Suggestions d'images :</h4>
+        <div class="image-grid">
+          <div
+            *ngFor="let img of imageSearchResults"
+            class="image-option"
+            (click)="selectImage(img)"
+          >
+            <img [src]="img" [alt]="imageSearchQuery" />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

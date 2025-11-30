@@ -1,0 +1,54 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="nav-header">
+      <a routerLink="/" class="nav-brand">
+        🌱 Mon Potager
+      </a>
+      <button
+        class="menu-toggle"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="isMenuOpen()"
+        aria-label="Toggle menu"
+      >
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+        <span class="hamburger-line"></span>
+      </button>
+    </div>
+
+    <div class="nav-menu" [class.active]="isMenuOpen()">
+      <a
+        routerLink="/vegetables"
+        routerLinkActive="active"
+        class="nav-link"
+        (click)="closeMenu()"
+      >
+        Légumes
+      </a>
+      <a
+        routerLink="/harvests"
+        routerLinkActive="active"
+        class="nav-link"
+        (click)="closeMenu()"
+      >
+        Récoltes
+      </a>
+      <a
+        routerLink="/statistics"
+        routerLinkActive="active"
+        class="nav-link"
+        (click)="closeMenu()"
+      >
+        Statistiques
+      </a>
+      <a
+        routerLink="/import-export"
+        routerLinkActive="active"
+        class="nav-link"
+        (click)="closeMenu()"
+      >
+        Import/Export
+      </a>
+    </div>
+  </div>
+</nav>

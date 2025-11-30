@@ -1,0 +1,130 @@
+<div class="container">
+  <h1 class="title">Suivi des récoltes</h1>
+
+  <div class="form">
+    <h2 class="form-title">Ajouter une récolte</h2>
+
+    <div class="form-group">
+      <label for="vegetable" class="label">Légume</label>
+      <select
+        id="vegetable"
+        [(ngModel)]="selectedVegetable"
+        class="input"
+        required
+      >
+        <option value="">-- Sélectionner un légume --</option>
+        <option *ngFor="let veg of vegetables" [value]="veg.name">
+          {{ veg.name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="quantity" class="label">Quantité</label>
+      <input
+        type="number"
+        id="quantity"
+        [(ngModel)]="quantity"
+        class="input"
+        min="0"
+        step="0.01"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="date" class="label">Date</label>
+      <input
+        type="date"
+        id="date"
+        [(ngModel)]="date"
+        class="input"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="notes" class="label">Notes (optionnel)</label>
+      <textarea
+        id="notes"
+        [(ngModel)]="notes"
+        class="input"
+        rows="3"
+        placeholder="Remarques sur cette récolte..."
+      ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="photo" class="label">Photo (optionnel)</label>
+      <div class="photo-upload-container">
+        <input
+          type="file"
+          id="photo"
+          accept="image/*"
+          capture="environment"
+          (change)="onPhotoSelected($event)"
+          class="file-input"
+          #fileInput
+        />
+        <button
+          type="button"
+          (click)="fileInput.click()"
+          class="btn btn-secondary"
+        >
+          📷 Prendre/Choisir une photo
+        </button>
+
+        <div *ngIf="photo" class="photo-preview">
+          <img [src]="photo" alt="Preview" class="preview-image" />
+          <button
+            type="button"
+            (click)="removePhoto()"
+            class="btn-remove-photo"
+            title="Supprimer la photo"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <button (click)="onAdd()" class="btn btn-primary">
+      Ajouter la récolte
+    </button>
+  </div>
+
+  <div class="harvests-list">
+    <h2 class="list-title">Historique des récoltes</h2>
+
+    <div *ngIf="harvests.length === 0" class="empty-state">
+      Aucune récolte enregistrée pour le moment.
+    </div>
+
+    <div *ngFor="let harvest of harvests" class="harvest-card">
+      <div class="harvest-header">
+        <h3 class="harvest-name">{{ harvest.vegetableName }}</h3>
+        <span class="harvest-date">{{ formatDate(harvest.date) }}</span>
+      </div>
+
+      <div class="harvest-body">
+        <div *ngIf="harvest.photo" class="harvest-photo">
+          <img [src]="harvest.photo" [alt]="harvest.vegetableName" class="harvest-thumbnail" />
+        </div>
+
+        <div class="harvest-quantity">
+          <strong>{{ harvest.quantity }}</strong> {{ getUnitLabel(harvest.unit) }}
+        </div>
+
+        <div *ngIf="harvest.notes" class="harvest-notes">
+          {{ harvest.notes }}
+        </div>
+      </div>
+
+      <div class="harvest-actions">
+        <button (click)="remove(harvest.id)" class="btn btn-danger btn-sm">
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
