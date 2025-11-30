@@ -78,20 +78,20 @@ export default class ImportExport implements OnInit {
         }
 
         // Check if vegetable exists
-        let vegetable = this.vegetableService.findByName(harvest.vegetableName);
+        let vegetable = await this.vegetableApiService.findByName(harvest.vegetableName);
 
         // Create vegetable if it doesn't exist
         if (!vegetable) {
-          this.vegetableService.add({
+          await this.vegetableApiService.add({
             name: harvest.vegetableName,
             unit: harvest.unit as 'g' | 'kg' | 'pcs',
           });
-          vegetable = this.vegetableService.findByName(harvest.vegetableName);
+          vegetable = await this.vegetableApiService.findByName(harvest.vegetableName);
         }
 
         // Add harvest
         if (vegetable) {
-          this.harvestService.add({
+          await this.harvestApiService.add({
             vegetableName: harvest.vegetableName,
             quantity: harvest.quantity,
             unit: vegetable.unit,
@@ -120,9 +120,9 @@ export default class ImportExport implements OnInit {
     }
   }
 
-  exportCurrentData(): void {
+  async exportCurrentData(): Promise<void> {
     try {
-      const harvests = this.harvestService.getAll();
+      const harvests = await this.harvestApiService.getAll();
 
       if (harvests.length === 0) {
         this.exportStatus = 'error';
