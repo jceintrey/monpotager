@@ -1,0 +1,133 @@
+<div class="container">
+  <h1 class="title">Import / Export des données</h1>
+
+  <!-- Current Data Stats -->
+  <div class="stats-row">
+    <div class="stat-box">
+      <div class="stat-number">{{ getCurrentHarvestCount() }}</div>
+      <div class="stat-label">Récoltes enregistrées</div>
+    </div>
+    <div class="stat-box">
+      <div class="stat-number">{{ getCurrentVegetableCount() }}</div>
+      <div class="stat-label">Légumes différents</div>
+    </div>
+  </div>
+
+  <!-- Export Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title">📤 Exporter les données</h2>
+      <p class="section-description">
+        Téléchargez toutes vos récoltes dans un fichier Excel (.xlsx)
+      </p>
+    </div>
+
+    <div class="section-content">
+      <button (click)="exportCurrentData()" class="btn btn-primary btn-large">
+        <span class="btn-icon">📥</span>
+        Exporter mes récoltes en Excel
+      </button>
+
+      <div *ngIf="exportStatus !== 'idle'" class="alert" [class.alert-success]="exportStatus === 'success'" [class.alert-error]="exportStatus === 'error'">
+        {{ exportMessage }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Import Section -->
+  <div class="section-card">
+    <div class="section-header">
+      <h2 class="section-title">📥 Importer des données</h2>
+      <p class="section-description">
+        Chargez un fichier Excel contenant vos récoltes. Le fichier doit contenir les colonnes : Légume, Quantité, Unité, Date, Notes
+      </p>
+    </div>
+
+    <div class="section-content">
+      <div class="file-input-wrapper">
+        <input
+          type="file"
+          id="file-input"
+          accept=".xlsx,.xls"
+          (change)="onFileSelected($event)"
+          class="file-input"
+        />
+        <label for="file-input" class="btn btn-secondary btn-large">
+          <span class="btn-icon">📁</span>
+          Choisir un fichier Excel
+        </label>
+      </div>
+
+      <div *ngIf="importStatus !== 'idle'" class="alert" [class.alert-success]="importStatus === 'success'" [class.alert-error]="importStatus === 'error'">
+        {{ importMessage }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Sample Data Section -->
+  <div class="section-card section-card-highlight">
+    <div class="section-header">
+      <h2 class="section-title">🎲 Données factices</h2>
+      <p class="section-description">
+        Générez des données d'exemple pour tester l'application
+      </p>
+    </div>
+
+    <div class="section-content">
+      <div class="button-group">
+        <button (click)="downloadSampleData()" class="btn btn-outline">
+          <span class="btn-icon">📄</span>
+          Télécharger un fichier exemple
+        </button>
+
+        <button (click)="loadSampleData()" class="btn btn-accent">
+          <span class="btn-icon">✨</span>
+          Charger 150 récoltes factices
+        </button>
+      </div>
+
+      <div *ngIf="sampleDataStatus !== 'idle'" class="alert" [class.alert-success]="sampleDataStatus === 'success'" [class.alert-error]="sampleDataStatus === 'error'">
+        {{ sampleDataMessage }}
+      </div>
+
+      <div class="info-box">
+        <strong>💡 Astuce :</strong> Les données factices incluent 10 légumes différents avec 150 récoltes réparties sur l'année 2024, parfait pour tester les statistiques !
+      </div>
+    </div>
+  </div>
+
+  <!-- Danger Zone -->
+  <div class="section-card section-card-danger">
+    <div class="section-header">
+      <h2 class="section-title">⚠️ Zone de danger</h2>
+      <p class="section-description">
+        Action irréversible : supprime toutes les données
+      </p>
+    </div>
+
+    <div class="section-content">
+      <button (click)="clearAllData()" class="btn btn-danger btn-large">
+        <span class="btn-icon">🗑️</span>
+        Supprimer toutes les données
+      </button>
+    </div>
+  </div>
+
+  <!-- Help Section -->
+  <div class="help-section">
+    <h3 class="help-title">📖 Format du fichier Excel</h3>
+    <div class="help-content">
+      <p>Votre fichier Excel doit contenir les colonnes suivantes :</p>
+      <ul class="help-list">
+        <li><strong>Légume</strong> : Nom du légume (obligatoire)</li>
+        <li><strong>Quantité</strong> : Nombre ou poids récolté (obligatoire)</li>
+        <li><strong>Unité</strong> : g, kg ou pcs (obligatoire)</li>
+        <li><strong>Date</strong> : Date de la récolte au format JJ/MM/AAAA (obligatoire)</li>
+        <li><strong>Notes</strong> : Remarques sur la récolte (facultatif)</li>
+      </ul>
+      <p class="help-note">
+        <strong>Exemple :</strong> Téléchargez le fichier exemple pour voir le format attendu.
+      </p>
+    </div>
+  </div>
+</div>
