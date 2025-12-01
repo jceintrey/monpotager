@@ -1,0 +1,179 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="close()">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">{{ modalTitle }}</h2>
+      <button class="btn-close" (click)="close()" aria-label="Close">&times;</button>
+    </div>
+
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-banner">
+      <strong>Erreur :</strong> {{ error }}
+    </div>
+
+    <!-- Form -->
+    <form class="modal-form" (ngSubmit)="save()">
+      <!-- Vegetable Name -->
+      <div class="form-group">
+        <label for="vegetableName" class="form-label">
+          Légume <span class="required">*</span>
+        </label>
+        <input
+          type="text"
+          id="vegetableName"
+          [(ngModel)]="vegetableName"
+          name="vegetableName"
+          class="form-input"
+          list="vegetablesList"
+          placeholder="Ex: Tomates"
+          required
+          [disabled]="isEditMode"
+        />
+        <datalist id="vegetablesList">
+          <option *ngFor="let veg of allVegetableNames" [value]="veg">{{ veg }}</option>
+        </datalist>
+        <small class="form-hint">
+          Vous pouvez choisir dans la liste ou entrer un nouveau légume
+        </small>
+      </div>
+
+      <!-- Sowing Type -->
+      <div class="form-group">
+        <label for="sowingType" class="form-label">
+          Type de semis <span class="required">*</span>
+        </label>
+        <select
+          id="sowingType"
+          [(ngModel)]="sowingTypeId"
+          name="sowingType"
+          class="form-select"
+          required
+          [disabled]="isEditMode"
+        >
+          <option [value]="null" disabled>-- Sélectionnez --</option>
+          <option *ngFor="let type of sowingTypes" [value]="type.id">
+            {{ type.icon }} {{ type.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Sowing Period -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="sowingStart" class="form-label">
+            Début de semis <span class="required">*</span>
+          </label>
+          <select
+            id="sowingStart"
+            [(ngModel)]="sowingStartDecade"
+            name="sowingStart"
+            class="form-select"
+            required
+          >
+            <option *ngFor="let d of decades" [value]="d.value">
+              {{ d.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="sowingEnd" class="form-label">
+            Fin de semis <span class="required">*</span>
+          </label>
+          <select
+            id="sowingEnd"
+            [(ngModel)]="sowingEndDecade"
+            name="sowingEnd"
+            class="form-select"
+            required
+          >
+            <option *ngFor="let d of decades" [value]="d.value">
+              {{ d.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Harvest Period -->
+      <div class="form-row">
+        <div class="form-group">
+          <label for="harvestStart" class="form-label">
+            Début de récolte <span class="required">*</span>
+          </label>
+          <select
+            id="harvestStart"
+            [(ngModel)]="harvestStartDecade"
+            name="harvestStart"
+            class="form-select"
+            required
+          >
+            <option *ngFor="let d of decades" [value]="d.value">
+              {{ d.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="harvestEnd" class="form-label">
+            Fin de récolte <span class="required">*</span>
+          </label>
+          <select
+            id="harvestEnd"
+            [(ngModel)]="harvestEndDecade"
+            name="harvestEnd"
+            class="form-select"
+            required
+          >
+            <option *ngFor="let d of decades" [value]="d.value">
+              {{ d.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Growth Duration -->
+      <div class="form-group">
+        <label for="growthDuration" class="form-label">
+          Durée de culture (jours)
+        </label>
+        <input
+          type="number"
+          id="growthDuration"
+          [(ngModel)]="growthDurationDays"
+          name="growthDuration"
+          class="form-input"
+          placeholder="Ex: 90"
+          min="1"
+          max="365"
+        />
+        <small class="form-hint">
+          Durée approximative entre le semis et la première récolte
+        </small>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group">
+        <label for="notes" class="form-label">Notes</label>
+        <textarea
+          id="notes"
+          [(ngModel)]="notes"
+          name="notes"
+          class="form-textarea"
+          rows="3"
+          placeholder="Conseils, variétés, conditions particulières..."
+        ></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-actions">
+        <button type="button" (click)="close()" class="btn btn-secondary" [disabled]="saving">
+          Annuler
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving">
+          <span *ngIf="!saving">{{ isEditMode ? 'Modifier' : 'Ajouter' }}</span>
+          <span *ngIf="saving">Enregistrement...</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
