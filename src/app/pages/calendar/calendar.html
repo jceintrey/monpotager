@@ -1,0 +1,191 @@
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1 class="title">📅 Calendrier des semis & récoltes</h1>
+
+    <!-- Climate Selector -->
+    <div class="climate-selector" *ngIf="userSettings && climates.length > 0">
+      <label for="climate">Climat :</label>
+      <select
+        id="climate"
+        [(ngModel)]="userSettings.climate_id"
+        (change)="changeClimate(userSettings.climate_id)"
+        class="select"
+      >
+        <option *ngFor="let climate of climates" [value]="climate.id">
+          {{ climate.name }} - {{ climate.description }}
+        </option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="loading">
+    <div class="spinner"></div>
+    <p>Chargement du calendrier...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error" class="error-message">
+    <strong>Erreur :</strong> {{ error }}
+    <button (click)="loadData()" class="btn-retry">Réessayer</button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading && !error">
+    <!-- Filters Section -->
+    <div class="filters-section">
+      <!-- Search -->
+      <div class="search-box">
+        <input
+          type="text"
+          [(ngModel)]="searchQuery"
+          (ngModelChange)="buildCalendarGrid()"
+          placeholder="🔍 Rechercher un légume..."
+          class="search-input"
+        />
+      </div>
+
+      <!-- Vegetable Filters -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <span class="filter-label">Légumes :</span>
+          <div class="filter-actions">
+            <button (click)="selectAllVegetables()" class="btn-filter-sm">
+              Tout sélectionner
+            </button>
+            <button (click)="deselectAllVegetables()" class="btn-filter-sm">
+              Tout désélectionner
+            </button>
+          </div>
+        </div>
+
+        <div class="filter-chips">
+          <label
+            *ngFor="let veg of allVegetableNames"
+            class="chip"
+            [class.active]="selectedVegetables.includes(veg)"
+          >
+            <input
+              type="checkbox"
+              [checked]="selectedVegetables.includes(veg)"
+              (change)="toggleVegetable(veg)"
+            />
+            <span>{{ veg }}</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Sowing Type Filters -->
+      <div class="filter-group">
+        <div class="filter-header">
+          <span class="filter-label">Types de semis :</span>
+        </div>
+
+        <div class="filter-chips">
+          <label
+            *ngFor="let type of sowingTypes"
+            class="chip"
+            [class.active]="selectedSowingTypes.includes(type.id)"
+          >
+            <input
+              type="checkbox"
+              [checked]="selectedSowingTypes.includes(type.id)"
+              (change)="toggleSowingType(type.id)"
+            />
+            <span>{{ type.icon }} {{ type.name }}</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item">
+        <span class="legend-color legend-sowing"></span>
+        <span>Période de semis</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color legend-harvest"></span>
+        <span>Période de récolte</span>
+      </div>
+      <div class="legend-item">
+        <span class="legend-color legend-both"></span>
+        <span>Semis + Récolte</span>
+      </div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="calendar-wrapper">
+      <div class="calendar-grid">
+        <!-- Header Row: Months -->
+        <div class="calendar-header">
+          <div class="row-label">Légumes</div>
+          <div *ngFor="let month of months" class="month-header">
+            <div class="month-name">{{ month.monthName }}</div>
+            <div class="decade-headers">
+              <div class="decade-label">D</div>
+              <div class="decade-label">M</div>
+              <div class="decade-label">F</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data Rows: Vegetables -->
+        <div
+          *ngFor="let row of filteredVegetableRows"
+          class="calendar-row"
+        >
+          <div class="row-label vegetable-name">{{ row.vegetableName }}</div>
+
+          <!-- Cells: 36 decades -->
+          <div class="row-cells">
+            <div
+              *ngFor="let cell of row.cells"
+              class="calendar-cell"
+              [ngClass]="getCellClass(cell)"
+              [title]="getCellTooltip(cell)"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredVegetableRows.length === 0" class="empty-state">
+          <div class="empty-icon">🌱</div>
+          <p>Aucune donnée à afficher</p>
+          <p class="empty-subtitle">
+            Essayez de modifier vos filtres ou sélectionnez d'autres légumes.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- List View (Alternative) -->
+    <div *ngIf="viewMode === 'list'" class="list-view">
+      <div *ngFor="let entry of getFilteredEntries()" class="list-item">
+        <div class="list-item-header">
+          <h3>{{ entry.vegetable_name }}</h3>
+          <span class="badge">{{ entry.sowing_type_icon }} {{ entry.sowing_type_name }}</span>
+        </div>
+        <div class="list-item-body">
+          <div class="period-info">
+            <span class="period-label">Semis :</span>
+            <span class="period-value">{{ formatPeriod(entry.sowing_start_decade, entry.sowing_end_decade) }}</span>
+          </div>
+          <div class="period-info">
+            <span class="period-label">Récolte :</span>
+            <span class="period-value">{{ formatPeriod(entry.harvest_start_decade, entry.harvest_end_decade) }}</span>
+          </div>
+          <div *ngIf="entry.growth_duration_days" class="period-info">
+            <span class="period-label">Durée :</span>
+            <span class="period-value">{{ entry.growth_duration_days }} jours</span>
+          </div>
+          <div *ngIf="entry.notes" class="notes">
+            <span class="period-label">Notes :</span>
+            <span class="period-value">{{ entry.notes }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
