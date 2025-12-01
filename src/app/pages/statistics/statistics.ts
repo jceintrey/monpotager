@@ -2,8 +2,8 @@ import { Component, OnInit, OnDestroy, ElementRef, ViewChild } from '@angular/co
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Chart, registerables } from 'chart.js';
-import { HarvestService } from '../../services/harvest.service';
-import { VegetableService } from '../../services/vegetable.service';
+import { HarvestApiService } from '../../services/harvest-api.service';
+import { VegetableApiService } from '../../services/vegetable-api.service';
 import { Harvest } from '../../models/harvest';
 import { Vegetable } from '../../models/vegetable';
 
@@ -23,9 +23,11 @@ interface MonthlyData {
 })
 export default class Statistics implements OnInit, OnDestroy {
   @ViewChild('pieCanvas') pieCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('pieCanvasPcs') pieCanvasPcs!: ElementRef<HTMLCanvasElement>;
   @ViewChild('lineCanvas') lineCanvas!: ElementRef<HTMLCanvasElement>;
 
   pieChart?: Chart;
+  pieChartPcs?: Chart;
   lineChart?: Chart;
 
   vegetables: Vegetable[] = [];
@@ -33,13 +35,13 @@ export default class Statistics implements OnInit, OnDestroy {
   selectedVegetables: string[] = [];
 
   constructor(
-    private harvestService: HarvestService,
-    private vegetableService: VegetableService
+    private harvestApiService: HarvestApiService,
+    private vegetableApiService: VegetableApiService
   ) {}
 
-  ngOnInit(): void {
-    this.vegetables = this.vegetableService.getAll();
-    this.harvests = this.harvestService.getAll();
+  async ngOnInit(): Promise<void> {
+    this.vegetables = await this.vegetableApiService.getAll();
+    this.harvests = await this.harvestApiService.getAll();
 
     // Select all vegetables by default
     this.selectedVegetables = this.vegetables.map((v) => v.name);
@@ -47,12 +49,14 @@ export default class Statistics implements OnInit, OnDestroy {
     // Wait for view to be ready
     setTimeout(() => {
       this.createPieChart();
+      this.createPieChartPcs();
       this.createLineChart();
     }, 0);
   }
 
   ngOnDestroy(): void {
     this.pieChart?.destroy();
+    this.pieChartPcs?.destroy();
     this.lineChart?.destroy();
   }
 
@@ -86,11 +90,17 @@ export default class Statistics implements OnInit, OnDestroy {
     const ctx = this.pieCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Calculate total quantity per vegetable
-    const vegData = this.vegetables.map((veg) => {
-      const total = this.harvestService.getTotalByVegetable(veg.name);
-      return { name: veg.name, total, unit: veg.unit };
-    });
+    // Calculate total quantity per vegetable (weight only: g/kg)
+    const vegData = this.vegetables
+      .filter((veg) => veg.unit === 'g' || veg.unit === 'kg')
+      .map((veg) => {
+        const vegHarvests = this.harvests.filter((h) => h.vegetableName === veg.name);
+        const totalInGrams = vegHarvests.reduce((sum, h) => {
+          return sum + (h.unit === 'kg' ? h.quantity * 1000 : h.quantity);
+        }, 0);
+        const totalInKg = totalInGrams / 1000;
+        return { name: veg.name, total: totalInKg, unit: 'kg' };
+      });
 
     // Filter vegetables with harvests
     const vegWithHarvests = vegData.filter((v) => v.total > 0);
@@ -107,7 +117,7 @@ export default class Statistics implements OnInit, OnDestroy {
         labels: vegWithHarvests.map((v) => v.name),
         datasets: [
           {
-            label: 'Quantité totale récoltée',
+            label: 'Quantité totale récoltée (poids)',
             data: vegWithHarvests.map((v) => v.total),
             backgroundColor: colors,
             borderColor: '#ffffff',
@@ -132,7 +142,71 @@ export default class Statistics implements OnInit, OnDestroy {
             callbacks: {
               label: (context) => {
                 const veg = vegWithHarvests[context.dataIndex];
-                return `${veg.name}: ${veg.total} ${this.getUnitLabel(veg.unit)}`;
+                return `${veg.name}: ${veg.total.toFixed(2)} kg`;
+              },
+            },
+          },
+        },
+      },
+    });
+  }
+
+  private createPieChartPcs(): void {
+    if (!this.pieCanvasPcs) return;
+
+    const ctx = this.pieCanvasPcs.nativeElement.getContext('2d');
+    if (!ctx) return;
+
+    // Calculate total quantity per vegetable (pieces only)
+    const vegData = this.vegetables
+      .filter((veg) => veg.unit === 'pcs')
+      .map((veg) => {
+        const vegHarvests = this.harvests.filter((h) => h.vegetableName === veg.name);
+        const total = vegHarvests.reduce((sum, h) => sum + h.quantity, 0);
+        return { name: veg.name, total, unit: 'pcs' };
+      });
+
+    // Filter vegetables with harvests
+    const vegWithHarvests = vegData.filter((v) => v.total > 0);
+
+    if (vegWithHarvests.length === 0) {
+      return;
+    }
+
+    const colors = this.generateColors(vegWithHarvests.length);
+
+    this.pieChartPcs = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: vegWithHarvests.map((v) => v.name),
+        datasets: [
+          {
+            label: 'Quantité totale récoltée (pièces)',
+            data: vegWithHarvests.map((v) => v.total),
+            backgroundColor: colors,
+            borderColor: '#ffffff',
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          tooltip: {
+            callbacks: {
+              label: (context) => {
+                const veg = vegWithHarvests[context.dataIndex];
+                return `${veg.name}: ${veg.total} pcs`;
               },
             },
           },
@@ -299,12 +373,21 @@ export default class Statistics implements OnInit, OnDestroy {
   }
 
   getMostHarvestedVegetable(): string {
-    const vegData = this.vegetables.map((veg) => ({
-      name: veg.name,
-      total: this.harvestService.getTotalByVegetable(veg.name),
-    }));
+    const vegData = this.vegetables.map((veg) => {
+      const vegHarvests = this.harvests.filter((h) => h.vegetableName === veg.name);
+      const total = vegHarvests.reduce((sum, h) => sum + h.quantity, 0);
+      return { name: veg.name, total };
+    });
 
     vegData.sort((a, b) => b.total - a.total);
     return vegData[0]?.name || 'Aucun';
+  }
+
+  hasWeightVegetables(): boolean {
+    return this.vegetables.some((v) => v.unit === 'g' || v.unit === 'kg');
+  }
+
+  hasPcsVegetables(): boolean {
+    return this.vegetables.some((v) => v.unit === 'pcs');
   }
 }
