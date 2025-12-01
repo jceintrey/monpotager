@@ -28,9 +28,9 @@
     </div>
   </div>
 
-  <!-- Pie Chart Section -->
-  <div class="chart-section">
-    <h2 class="section-title">Répartition des récoltes par légume</h2>
+  <!-- Pie Chart Section - Weight -->
+  <div class="chart-section" *ngIf="hasWeightVegetables()">
+    <h2 class="section-title">Répartition des récoltes par poids (kg)</h2>
     <div class="chart-container">
       <div *ngIf="harvests.length === 0" class="empty-chart">
         <div class="empty-icon">📊</div>
@@ -38,6 +38,19 @@
         <p class="empty-subtitle">Ajoutez vos premières récoltes pour voir les statistiques.</p>
       </div>
       <canvas #pieCanvas *ngIf="harvests.length > 0"></canvas>
+    </div>
+  </div>
+
+  <!-- Pie Chart Section - Pieces -->
+  <div class="chart-section" *ngIf="hasPcsVegetables()">
+    <h2 class="section-title">Répartition des récoltes par pièces</h2>
+    <div class="chart-container">
+      <div *ngIf="harvests.length === 0" class="empty-chart">
+        <div class="empty-icon">📊</div>
+        <p>Aucune donnée de récolte disponible.</p>
+        <p class="empty-subtitle">Ajoutez vos premières récoltes pour voir les statistiques.</p>
+      </div>
+      <canvas #pieCanvasPcs *ngIf="harvests.length > 0"></canvas>
     </div>
   </div>
 
