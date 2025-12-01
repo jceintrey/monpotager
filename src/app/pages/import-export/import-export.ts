@@ -241,10 +241,6 @@ export default class ImportExport implements OnInit {
       const result = await this.migrationService.migrateToNeon();
 
       if (result.success) {
-        // Enable API mode for both services
-        this.vegetableApiService.enableApiMode();
-        this.harvestApiService.enableApiMode();
-
         this.migrationStatus = 'success';
         this.migrationMessage = `Migration réussie ! ${result.vegetablesMigrated} légume(s) et ${result.harvestsMigrated} récolte(s) migrés.`;
 
@@ -278,8 +274,6 @@ export default class ImportExport implements OnInit {
 
   resetMigrationStatus(): void {
     this.migrationService.resetMigrationStatus();
-    this.vegetableApiService.disableApiMode();
-    this.harvestApiService.disableApiMode();
     this.ngOnInit();
   }
 }
