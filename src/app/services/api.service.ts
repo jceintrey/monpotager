@@ -5,8 +5,9 @@ import type { Vegetable } from '../models/vegetable';
 import type { Harvest } from '../models/harvest';
 
 // Determine API base URL (local dev or production)
+// Docker: port 3000, Netlify Functions: port 8888
 const API_BASE_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:8888/api'
+  ? 'http://localhost:3000/api'
   : '/api';
 
 @Injectable({ providedIn: 'root' })
