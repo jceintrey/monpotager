@@ -30,8 +30,9 @@ COPY --from=builder /app/dist/monpotager/browser ./dist
 # Copy backend server and API
 COPY server ./server
 
-# Create uploads directory
-RUN mkdir -p /app/uploads && chown -R node:node /app/uploads
+# Create uploads directory and set permissions
+RUN mkdir -p /app/uploads && \
+    chown -R node:node /app
 
 # Use non-root user
 USER node

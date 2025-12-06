@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/', async (req, res, next) => {
   try {
     const climates = await sql`
-      SELECT id, name, description, icon
+      SELECT id, name, description
       FROM climates
       ORDER BY id
     `;
